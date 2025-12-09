@@ -1,6 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
+    // Exclude problematic viem test decorators completely
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /viem.*\/clients\/decorators\/test$/
+      })
+    )
+
+    // Exclude specific problematic test files and actions
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /viem.*\/actions\/test\//
+      })
+    )
+
+    // Ignore problematic test modules
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /(tap|why-is-node-running|worker_threads)$/
+      })
+    )
+
     // Handle client-side fallbacks
     if (!isServer) {
       config.resolve.fallback = {
@@ -20,20 +41,23 @@ const nextConfig = {
       "react-native": false,
       "tap": false,
       "worker_threads": false,
+      "why-is-node-running": false,
     }
 
-    // Ignore all warnings and errors for optional dependencies and test-related modules
+    // Ignore all warnings and errors
     config.ignoreWarnings = [
-      { module: /node_modules\/pino/ },
-      { module: /node_modules\/@metamask/ },
-      { module: /node_modules\/thread-stream/ },
-      { module: /node_modules.*\/test\// },
-      { message: /Can't resolve 'tap'/ },
-      { message: /Can't resolve 'pino-pretty'/ },
-      { message: /Can't resolve '@react-native-async-storage\/async-storage'/ },
-      { message: /Can't resolve 'worker_threads'/ },
-      { message: /Module not found.*tap/ },
-      { message: /Attempted import error.*test/ }
+      /node_modules\/pino/,
+      /node_modules\/@metamask/,
+      /node_modules\/thread-stream/,
+      /node_modules.*\/test/,
+      /node_modules.*viem.*test/,
+      /Can't resolve.*tap/,
+      /Can't resolve.*pino-pretty/,
+      /Can't resolve.*@react-native-async-storage/,
+      /Can't resolve.*worker_threads/,
+      /Can't resolve.*why-is-node-running/,
+      /Module not found/,
+      /Attempted import error/,
     ]
 
     return config
